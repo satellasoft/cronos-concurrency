@@ -8,5 +8,6 @@ return [
     
     //Validations
     'not_found'   => 'Cliente não encontrado',
-    'error_store' => 'Houve um erro ao tentar salvar o cliente'
+    'error_store' => 'Houve um erro ao tentar salvar o cliente',
+    'invalid_amount_value' => 'O valor ou formato do valor é inválido',
 ];

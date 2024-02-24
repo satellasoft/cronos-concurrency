@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\Money;
 use App\Http\Requests\Customer\CustomerFormRequest;
+use App\Http\Requests\Customer\CustomerUpdateBalanceRequest;
 use App\Http\Resources\Customer\CustomerBalanceResource;
 use App\Http\Resources\Customer\CustomerResource;
 use App\Repositories\CustomerRepository;
@@ -26,11 +27,11 @@ class CustomerController extends Controller
      */
     public function store(CustomerFormRequest $request): \Illuminate\Http\JsonResponse
     {
-        $form = $request->validated();
+        $payload = $request->validated();
 
-        $form['amount'] = Money::toDecimal($form['amount']);
+        $payload['amount'] = Money::toDecimal($payload['amount']);
 
-        $customer = $this->customerRepository->store($form);
+        $customer = $this->customerRepository->store($payload);
 
         if (!$customer || $customer == null)
             return response()->json(
@@ -43,9 +44,26 @@ class CustomerController extends Controller
         return response()->json(new CustomerResource($customer), Response::HTTP_CREATED);
     }
 
-    public function update(int $customerId)
+    public function updateBalance(int $customerId, CustomerUpdateBalanceRequest $request): \Illuminate\Http\JsonResponse
     {
-        dd('update ' . $customerId);
+        $payload = $request->validated();
+
+        $payload['amount'] = Money::toDecimal($payload['amount']);
+
+        if (!is_numeric($payload['amount']))
+            throw new \InvalidArgumentException(__('customer.invalid_amount_value'));
+
+        $customer = $this->customerRepository->updateBalance($customerId, $payload);
+
+        if (!$customer || $customer == null)
+            return response()->json(
+                [
+                    'error' => __('customer.error_store')
+                ],
+                Response::HTTP_OK
+            );
+
+        return response()->json(new CustomerResource($customer), Response::HTTP_CREATED);
     }
 
     /**

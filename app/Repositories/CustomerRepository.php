@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
@@ -26,13 +27,15 @@ class CustomerRepository
             $customer->save();
 
             return $customer;
-        } catch (\Exception $ex) {
+        } catch (Throwable $th) {
             Log::error(
                 'Error during STORE customer!',
                 [
-                    'message' => $ex->getMessage()
+                    'message' => $th->getMessage()
                 ]
             );
+            throw $th;
+
             return null;
         }
     }
@@ -42,19 +45,33 @@ class CustomerRepository
      *
      * @param  int $customerId Customer ID reference
      * @param  array $data Array with data to update
-     * @return bool Return return true if update or false otherwise
+     * @return Customer Return Customer if updated
      */
-    public function update(int $customerId, array $data): bool
+    public function updateBalance(int $customerId, array $data): Customer
     {
         try {
-            $customer = Customer::find($customerId);
-            $customer->name  = $data['name'];
-            $customer->amount  = $data['amount'];
+            DB::beginTransaction();
 
-            return $customer->save();
-        } catch (\Exception $ex) {
-            Log::error('Error during UPDATE customer!', $ex->getMessage());
-            return false;
+            $currentAmount = Customer::where('id', $customerId)->lockForUpdate()->value('amount');
+
+            Customer::where('id', $customerId)->update(['before_amount' => $currentAmount]);
+
+            Customer::where('id', $customerId)->update(['amount' => $data['amount']]);
+
+            DB::commit();
+
+            return Customer::find($customerId);
+        } catch (Throwable $th) {
+            DB::rollBack();
+
+            Log::error('Error during UPDATE Balance!', [
+                'message' => $th->getMessage(),
+                'id' => $customerId
+            ]);
+
+            throw $th;
+
+            return null;
         }
     }
 
@@ -84,6 +101,8 @@ class CustomerRepository
                 ]
             );
             throw $th;
+
+            return null;
         }
     }
 }
