@@ -1,19 +1,14 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+Route::prefix('customer')->group(function () {
+    Route::post('/', [CustomerController::class, 'store'])->name('customer.store');
+    Route::get('/{id}', [CustomerController::class, 'getBalance'])->name('customer.get_balance')->whereNumber('id');
+    Route::put('/{id}', [CustomerController::class, 'update'])->name('customer.update')->whereNumber('id');
+});
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::get('info', function () {
+    phpinfo();
 });
