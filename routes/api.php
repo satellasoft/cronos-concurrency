@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 Route::prefix('customer')->group(function () {
     Route::post('/', [CustomerController::class, 'store'])->name('customer.store');
@@ -11,4 +12,10 @@ Route::prefix('customer')->group(function () {
 
 Route::get('info', function () {
     phpinfo();
+});
+
+Route::get('log', function () {
+    Log::warning('Testing Log');
+
+    dd('logged');
 });
